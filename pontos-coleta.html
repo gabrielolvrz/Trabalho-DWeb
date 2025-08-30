@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pontos de Coleta - ReciclaFácil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+</head>
+<body>
+    <header class="bg-success text-white py-3">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="h3 mb-0">🌱 ReciclaFácil</h1>
+                    <small>Gerenciar Pontos de Coleta</small>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <span class="me-3">Bem-vindo, <strong id="userName">Usuário</strong></span>
+                    <a href="perfil.html" class="btn btn-outline-light btn-sm me-2">Perfil</a>
+                    <a href="#" id="logoutBtn" class="btn btn-light btn-sm">Sair</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="pontos-coleta.html">Pontos de Coleta</a>
+                    </li>
+                    <li class="nav-item" id="usersNavItem">
+                        <a class="nav-link" href="usuarios.html">Usuários</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="perfil.html">Meu Perfil</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main class="py-4">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h2>Pontos de Coleta</h2>
+                    <p class="text-muted">Gerencie os pontos de coleta cadastrados no sistema</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPontoModal">
+                        <span class="me-2">➕</span>Novo Ponto
+                    </button>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <form id="searchFilterForm">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="searchName" class="form-label">Buscar por nome</label>
+                                        <input type="text" class="form-control" id="searchName" placeholder="Digite o nome do ponto">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="filterMaterial" class="form-label">Material</label>
+                                        <select class="form-select" id="filterMaterial">
+                                            <option value="">Todos os materiais</option>
+                                            <option value="papel">Papel</option>
+                                            <option value="plastico">Plástico</option>
+                                            <option value="vidro">Vidro</option>
+                                            <option value="metal">Metal</option>
+                                            <option value="eletronicos">Eletrônicos</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="filterStatus" class="form-label">Status</label>
+                                        <select class="form-select" id="filterStatus">
+                                            <option value="">Todos os status</option>
+                                            <option value="disponivel">Disponível</option>
+                                            <option value="limitado">Capacidade Limitada</option>
+                                            <option value="manutencao">Manutenção</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary w-100">Buscar</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Lista de Pontos de Coleta</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="pontosTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Materiais</th>
+                                            <th>Endereço</th>
+                                            <th>Status</th>
+                                            <th>Responsável</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <strong>EcoPonto Centro</strong><br>
+                                                <small class="text-muted">Seg-Sex: 8h-17h</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary me-1">Papel</span>
+                                                <span class="badge bg-primary me-1">Plástico</span>
+                                                <span class="badge bg-primary">Vidro</span>
+                                            </td>
+                                            <td>
+                                                <small>Rua das Flores, 123<br>Centro - São Paulo/SP</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success">Disponível</span>
+                                            </td>
+                                            <td>Cooperativa Verde</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" onclick="editPonto(1)">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-outline-info" onclick="viewPonto(1)">
+                                                        👁️
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" onclick="deletePonto(1)">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Cooperativa Sustentável</strong><br>
+                                                <small class="text-muted">Seg-Sáb: 7h-16h</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary me-1">Metal</span>
+                                                <span class="badge bg-primary">Eletrônicos</span>
+                                            </td>
+                                            <td>
+                                                <small>Av. Sustentável, 456<br>Bairro Novo - São Paulo/SP</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning">Capacidade Limitada</span>
+                                            </td>
+                                            <td>João Silva</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" onclick="editPonto(2)">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-outline-info" onclick="viewPonto(2)">
+                                                        👁️
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" onclick="deletePonto(2)">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>Recicla Mais</strong><br>
+                                                <small class="text-muted">Ter-Dom: 9h-18h</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary me-1">Papel</span>
+                                                <span class="badge bg-primary me-1">Plástico</span>
+                                                <span class="badge bg-primary">Metal</span>
+                                            </td>
+                                            <td>
+                                                <small>Rua Ecológica, 789<br>Vila Verde - São Paulo/SP</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success">Disponível</span>
+                                            </td>
+                                            <td>Maria Santos</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" onclick="editPonto(3)">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-outline-info" onclick="viewPonto(3)">
+                                                        👁️
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" onclick="deletePonto(3)">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <div class="modal fade" id="addPontoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo Ponto de Coleta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPontoForm" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="pontoName" class="form-label">Nome do Ponto</label>
+                                <input type="text" class="form-control" id="pontoName" required>
+                                <div class="invalid-feedback">
+                                    Por favor, insira o nome do ponto.
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pontoResponsavel" class="form-label">Responsável</label>
+                                <select class="form-select" id="pontoResponsavel" required>
+                                    <option value="">Selecione o responsável</option>
+                                    <option value="1">Cooperativa Verde</option>
+                                    <option value="2">João Silva</option>
+                                    <option value="3">Maria Santos</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Por favor, selecione um responsável.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Materiais Aceitos</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="materialPapel" value="papel">
+                                        <label class="form-check-label" for="materialPapel">Papel</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="materialPlastico" value="plastico">
+                                        <label class="form-check-label" for="materialPlastico">Plástico</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="materialVidro" value="vidro">
+                                        <label class="form-check-label" for="materialVidro">Vidro</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="materialMetal" value="metal">
+                                        <label class="form-check-label" for="materialMetal">Metal</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="materialEletronicos" value="eletronicos">
+                                        <label class="form-check-label" for="materialEletronicos">Eletrônicos</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="materialOutros" value="outros">
+                                        <label class="form-check-label" for="materialOutros">Outros</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="pontoEndereco" class="form-label">Endereço Completo</label>
+                            <textarea class="form-control" id="pontoEndereco" rows="3" required></textarea>
+                            <div class="invalid-feedback">
+                                Por favor, insira o endereço completo.
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="pontoTelefone" class="form-label">Telefone</label>
+                                <input type="tel" class="form-control" id="pontoTelefone" placeholder="(11) 99999-9999">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pontoEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="pontoEmail">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="pontoHorarioInicio" class="form-label">Horário de Abertura</label>
+                                <input type="time" class="form-control" id="pontoHorarioInicio" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pontoHorarioFim" class="form-label">Horário de Fechamento</label>
+                                <input type="time" class="form-control" id="pontoHorarioFim" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="pontoDiasFuncionamento" class="form-label">Dias de Funcionamento</label>
+                            <input type="text" class="form-control" id="pontoDiasFuncionamento" placeholder="Ex: Segunda a Sexta" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="pontoStatus" class="form-label">Status Inicial</label>
+                            <select class="form-select" id="pontoStatus" required>
+                                <option value="">Selecione o status</option>
+                                <option value="disponivel">Disponível</option>
+                                <option value="limitado">Capacidade Limitada</option>
+                                <option value="manutencao">Em Manutenção</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="pontoObservacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="pontoObservacoes" rows="2" placeholder="Informações adicionais sobre o ponto de coleta"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="addPontoForm" class="btn btn-success">Cadastrar Ponto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>ReciclaFácil</h5>
+                    <p>Conectando você aos pontos de coleta para um futuro mais sustentável.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2024 ReciclaFácil. Todos os direitos reservados.</p>
+                    <p><small>Projeto acadêmico - Desenvolvimento Web</small></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/script.js"></script>
+</body>
+</html>
+

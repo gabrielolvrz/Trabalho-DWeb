@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários - ReciclaFácil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+</head>
+<body>
+    <header class="bg-success text-white py-3">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="h3 mb-0">🌱 ReciclaFácil</h1>
+                    <small>Gerenciar Usuários</small>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <span class="me-3">Bem-vindo, <strong id="userName">Administrador</strong></span>
+                    <a href="perfil.html" class="btn btn-outline-light btn-sm me-2">Perfil</a>
+                    <a href="#" id="logoutBtn" class="btn btn-light btn-sm">Sair</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="pontos-coleta.html">Pontos de Coleta</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="usuarios.html">Usuários</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="perfil.html">Meu Perfil</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main class="py-4">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h2>Gerenciar Usuários</h2>
+                    <p class="text-muted">Visualize e gerencie os usuários cadastrados no sistema</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <span class="me-2">👤</span>Novo Usuário
+                    </button>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <form id="searchUserForm">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="searchUserName" class="form-label">Buscar por nome</label>
+                                        <input type="text" class="form-control" id="searchUserName" placeholder="Digite o nome do usuário">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="filterUserType" class="form-label">Tipo de Usuário</label>
+                                        <select class="form-select" id="filterUserType">
+                                            <option value="">Todos os tipos</option>
+                                            <option value="admin">Administrador</option>
+                                            <option value="cooperativa">Cooperativa</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="filterUserStatus" class="form-label">Status</label>
+                                        <select class="form-select" id="filterUserStatus">
+                                            <option value="">Todos os status</option>
+                                            <option value="ativo">Ativo</option>
+                                            <option value="inativo">Inativo</option>
+                                            <option value="pendente">Pendente</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary w-100">Buscar</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="text-primary mb-2">
+                                <span style="font-size: 32px;">👥</span>
+                            </div>
+                            <h5 class="card-title">Total de Usuários</h5>
+                            <h3 class="text-primary">45</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="text-success mb-2">
+                                <span style="font-size: 32px;">✅</span>
+                            </div>
+                            <h5 class="card-title">Usuários Ativos</h5>
+                            <h3 class="text-success">42</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="text-info mb-2">
+                                <span style="font-size: 32px;">🏢</span>
+                            </div>
+                            <h5 class="card-title">Cooperativas</h5>
+                            <h3 class="text-info">38</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="text-warning mb-2">
+                                <span style="font-size: 32px;">⚙️</span>
+                            </div>
+                            <h5 class="card-title">Administradores</h5>
+                            <h3 class="text-warning">7</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Lista de Usuários</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="usersTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Usuário</th>
+                                            <th>Email</th>
+                                            <th>Tipo</th>
+                                            <th>Status</th>
+                                            <th>Data de Cadastro</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                        <span class="text-white fw-bold">JS</span>
+                                                    </div>
+                                                    <div>
+                                                        <strong>João Silva</strong><br>
+                                                        <small class="text-muted">Cooperativa Verde Ltda.</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>joao.silva@cooperativaverde.com</td>
+                                            <td><span class="badge bg-info">Cooperativa</span></td>
+                                            <td><span class="badge bg-success">Ativo</span></td>
+                                            <td>15/01/2024</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" onclick="editUser(1)" title="Editar">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-outline-info" onclick="viewUser(1)" title="Visualizar">
+                                                        👁️
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" onclick="deleteUser(1)" title="Excluir">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                        <span class="text-white fw-bold">MS</span>
+                                                    </div>
+                                                    <div>
+                                                        <strong>Maria Santos</strong><br>
+                                                        <small class="text-muted">EcoRecicla</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>maria.santos@ecorecicla.com</td>
+                                            <td><span class="badge bg-info">Cooperativa</span></td>
+                                            <td><span class="badge bg-success">Ativo</span></td>
+                                            <td>22/01/2024</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" onclick="editUser(2)" title="Editar">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-outline-info" onclick="viewUser(2)" title="Visualizar">
+                                                        👁️
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" onclick="deleteUser(2)" title="Excluir">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                        <span class="text-white fw-bold">CA</span>
+                                                    </div>
+                                                    <div>
+                                                        <strong>Carlos Almeida</strong><br>
+                                                        <small class="text-muted">Administrador do Sistema</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>carlos.admin@reciclafacil.com</td>
+                                            <td><span class="badge bg-warning">Administrador</span></td>
+                                            <td><span class="badge bg-success">Ativo</span></td>
+                                            <td>10/01/2024</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" onclick="editUser(3)" title="Editar">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-outline-info" onclick="viewUser(3)" title="Visualizar">
+                                                        👁️
+                                                    </button>
+                                                    <button class="btn btn-outline-secondary" disabled title="Não é possível excluir administrador principal">
+                                                        🔒
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                        <span class="text-white fw-bold">PO</span>
+                                                    </div>
+                                                    <div>
+                                                        <strong>Pedro Oliveira</strong><br>
+                                                        <small class="text-muted">Recicla Mais</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>pedro@reciclamais.com</td>
+                                            <td><span class="badge bg-info">Cooperativa</span></td>
+                                            <td><span class="badge bg-warning">Pendente</span></td>
+                                            <td>28/01/2024</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-success" onclick="approveUser(4)" title="Aprovar">
+                                                        ✅
+                                                    </button>
+                                                    <button class="btn btn-outline-primary" onclick="editUser(4)" title="Editar">
+                                                        ✏️
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" onclick="deleteUser(4)" title="Excluir">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo Usuário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="userFirstName" class="form-label">Nome</label>
+                                <input type="text" class="form-control" id="userFirstName" required>
+                                <div class="invalid-feedback">
+                                    Por favor, insira o nome.
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="userLastName" class="form-label">Sobrenome</label>
+                                <input type="text" class="form-control" id="userLastName" required>
+                                <div class="invalid-feedback">
+                                    Por favor, insira o sobrenome.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="userEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="userEmail" required>
+                            <div class="invalid-feedback">
+                                Por favor, insira um email válido.
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="userPhone" class="form-label">Telefone</label>
+                                <input type="tel" class="form-control" id="userPhone" placeholder="(11) 99999-9999">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="userType" class="form-label">Tipo de Usuário</label>
+                                <select class="form-select" id="userType" required>
+                                    <option value="">Selecione o tipo</option>
+                                    <option value="admin">Administrador</option>
+                                    <option value="cooperativa">Cooperativa</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Por favor, selecione o tipo de usuário.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="cooperativaUserFields" style="display: none;">
+                            <div class="mb-3">
+                                <label for="userOrganization" class="form-label">Nome da Organização</label>
+                                <input type="text" class="form-control" id="userOrganization">
+                            </div>
+                            <div class="mb-3">
+                                <label for="userCnpj" class="form-label">CNPJ</label>
+                                <input type="text" class="form-control" id="userCnpj" placeholder="00.000.000/0000-00">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="userPassword" class="form-label">Senha Temporária</label>
+                                <input type="password" class="form-control" id="userPassword" required>
+                                <div class="invalid-feedback">
+                                    A senha deve ter pelo menos 6 caracteres.
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="userStatus" class="form-label">Status</label>
+                                <select class="form-select" id="userStatus" required>
+                                    <option value="">Selecione o status</option>
+                                    <option value="ativo">Ativo</option>
+                                    <option value="pendente">Pendente</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="userAddress" class="form-label">Endereço</label>
+                            <textarea class="form-control" id="userAddress" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="sendWelcomeEmail">
+                            <label class="form-check-label" for="sendWelcomeEmail">
+                                Enviar email de boas-vindas com instruções de acesso
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="addUserForm" class="btn btn-success">Criar Usuário</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>ReciclaFácil</h5>
+                    <p>Conectando você aos pontos de coleta para um futuro mais sustentável.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2024 ReciclaFácil. Todos os direitos reservados.</p>
+                    <p><small>Projeto acadêmico - Desenvolvimento Web</small></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/script.js"></script>
+</body>
+</html>
+
