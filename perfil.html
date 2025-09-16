@@ -112,14 +112,14 @@
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label for="firstName" class="form-label">Nome</label>
-                                                <input type="text" class="form-control" id="firstName" value="João" required>
+                                                <input type="text" class="form-control" id="firstName" name="firstName" value="João" required>
                                                 <div class="invalid-feedback">
                                                     Por favor, insira seu nome.
                                                 </div>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label for="lastName" class="form-label">Sobrenome</label>
-                                                <input type="text" class="form-control" id="lastName" value="Silva" required>
+                                                <input type="text" class="form-control" id="lastName" name="lastName" value="Silva" required>
                                                 <div class="invalid-feedback">
                                                     Por favor, insira seu sobrenome.
                                                 </div>
@@ -128,7 +128,7 @@
 
                                         <div class="mb-3">
                                             <label for="email" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" value="joao.silva@exemplo.com" required>
+                                            <input type="email" class="form-control" id="email" name="email" value="joao.silva@exemplo.com" required>
                                             <div class="invalid-feedback">
                                                 Por favor, insira um email válido.
                                             </div>
@@ -137,7 +137,7 @@
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label for="phone" class="form-label">Telefone</label>
-                                                <input type="tel" class="form-control" id="phone" value="(11) 99999-9999">
+                                                <input type="tel" class="form-control" id="phone" name="phone" value="(11) 99999-9999">
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label for="userTypeDisplay" class="form-label">Tipo de Usuário</label>
@@ -148,17 +148,17 @@
                                         <div id="organizationFields">
                                             <div class="mb-3">
                                                 <label for="organizationName" class="form-label">Nome da Organização</label>
-                                                <input type="text" class="form-control" id="organizationName" value="Cooperativa Verde Ltda.">
+                                                <input type="text" class="form-control" id="organizationName" name="organizationName" value="Cooperativa Verde Ltda.">
                                             </div>
                                             <div class="mb-3">
                                                 <label for="cnpj" class="form-label">CNPJ</label>
-                                                <input type="text" class="form-control" id="cnpj" value="12.345.678/0001-90">
+                                                <input type="text" class="form-control" id="cnpj" name="cnpj" value="12.345.678/0001-90">
                                             </div>
                                         </div>
 
                                         <div class="mb-3">
                                             <label for="address" class="form-label">Endereço</label>
-                                            <textarea class="form-control" id="address" rows="3">Rua das Flores, 123 - Centro - São Paulo/SP - CEP: 01234-567</textarea>
+                                            <textarea class="form-control" id="address" name="address" rows="3">Rua das Flores, 123 - Centro - São Paulo/SP - CEP: 01234-567</textarea>
                                         </div>
 
                                         <div class="mb-3">
@@ -342,4 +342,3 @@
     <script src="../js/script.js"></script>
 </body>
 </html>
-

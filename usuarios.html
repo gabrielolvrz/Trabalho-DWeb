@@ -302,14 +302,14 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="userFirstName" class="form-label">Nome</label>
-                                <input type="text" class="form-control" id="userFirstName" required>
+                                <input type="text" class="form-control" id="userFirstName" name="firstName" required>
                                 <div class="invalid-feedback">
                                     Por favor, insira o nome.
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="userLastName" class="form-label">Sobrenome</label>
-                                <input type="text" class="form-control" id="userLastName" required>
+                                <input type="text" class="form-control" id="userLastName" name="lastName" required>
                                 <div class="invalid-feedback">
                                     Por favor, insira o sobrenome.
                                 </div>
@@ -318,7 +318,7 @@
 
                         <div class="mb-3">
                             <label for="userEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="userEmail" required>
+                            <input type="email" class="form-control" id="userEmail" name="email" required>
                             <div class="invalid-feedback">
                                 Por favor, insira um email válido.
                             </div>
@@ -327,11 +327,11 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="userPhone" class="form-label">Telefone</label>
-                                <input type="tel" class="form-control" id="userPhone" placeholder="(11) 99999-9999">
+                                <input type="tel" class="form-control" id="userPhone" name="phone" placeholder="(11) 99999-9999">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="userType" class="form-label">Tipo de Usuário</label>
-                                <select class="form-select" id="userType" required>
+                                <select class="form-select" id="userType" name="userType" required>
                                     <option value="">Selecione o tipo</option>
                                     <option value="admin">Administrador</option>
                                     <option value="cooperativa">Cooperativa</option>
@@ -345,25 +345,25 @@
                         <div id="cooperativaUserFields" style="display: none;">
                             <div class="mb-3">
                                 <label for="userOrganization" class="form-label">Nome da Organização</label>
-                                <input type="text" class="form-control" id="userOrganization">
+                                <input type="text" class="form-control" id="userOrganization" name="organization">
                             </div>
                             <div class="mb-3">
                                 <label for="userCnpj" class="form-label">CNPJ</label>
-                                <input type="text" class="form-control" id="userCnpj" placeholder="00.000.000/0000-00">
+                                <input type="text" class="form-control" id="userCnpj" name="cnpj" placeholder="00.000.000/0000-00">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="userPassword" class="form-label">Senha Temporária</label>
-                                <input type="password" class="form-control" id="userPassword" required>
+                                <input type="password" class="form-control" id="userPassword" name="password" required>
                                 <div class="invalid-feedback">
                                     A senha deve ter pelo menos 6 caracteres.
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="userStatus" class="form-label">Status</label>
-                                <select class="form-select" id="userStatus" required>
+                                <select class="form-select" id="userStatus" name="status" required>
                                     <option value="">Selecione o status</option>
                                     <option value="ativo">Ativo</option>
                                     <option value="pendente">Pendente</option>
@@ -373,7 +373,7 @@
 
                         <div class="mb-3">
                             <label for="userAddress" class="form-label">Endereço</label>
-                            <textarea class="form-control" id="userAddress" rows="3"></textarea>
+                            <textarea class="form-control" id="userAddress" name="address" rows="3"></textarea>
                         </div>
 
                         <div class="mb-3 form-check">
@@ -410,4 +410,3 @@
     <script src="../js/script.js"></script>
 </body>
 </html>
-
