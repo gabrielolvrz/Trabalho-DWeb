@@ -1036,15 +1036,16 @@ async function handleAddUser(e) {
     const data = Object.fromEntries(formData);
     
     // Preparar dados para envio
+    const nomeCompleto = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
     const userData = {
-        nome: data.nome,
+        nome: nomeCompleto,
         email: data.email,
-        senha: data.senha,
-        tipo: data.tipo,
+        senha: data.password,
+        tipo: data.userType || data.tipo,
         status: data.status || 'pendente',
-        organizacao: data.organizacao || null,
-        telefone: data.telefone || null,
-        endereco: data.endereco || null,
+        organizacao: data.organization || null,
+        telefone: data.phone || null,
+        endereco: data.address || null,
         cnpj: data.cnpj || null
     };
     
