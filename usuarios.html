@@ -103,7 +103,7 @@
                                 <span style="font-size: 32px;">👥</span>
                             </div>
                             <h5 class="card-title">Total de Usuários</h5>
-                            <h3 class="text-primary">45</h3>
+                            <h3 class="text-primary"><span id="totalUsers">0</span></h3>
                         </div>
                     </div>
                 </div>
@@ -114,7 +114,7 @@
                                 <span style="font-size: 32px;">✅</span>
                             </div>
                             <h5 class="card-title">Usuários Ativos</h5>
-                            <h3 class="text-success">42</h3>
+                            <h3 class="text-success"><span id="activeUsers">0</span></h3>
                         </div>
                     </div>
                 </div>
@@ -125,7 +125,7 @@
                                 <span style="font-size: 32px;">🏢</span>
                             </div>
                             <h5 class="card-title">Cooperativas</h5>
-                            <h3 class="text-info">38</h3>
+                            <h3 class="text-info"><span id="cooperativas">0</span></h3>
                         </div>
                     </div>
                 </div>
@@ -136,7 +136,7 @@
                                 <span style="font-size: 32px;">⚙️</span>
                             </div>
                             <h5 class="card-title">Administradores</h5>
-                            <h3 class="text-warning">7</h3>
+                            <h3 class="text-warning"><span id="administradores">0</span></h3>
                         </div>
                     </div>
                 </div>
@@ -160,124 +160,12 @@
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="usersTableBody">
                                         <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                                        <span class="text-white fw-bold">JS</span>
-                                                    </div>
-                                                    <div>
-                                                        <strong>João Silva</strong><br>
-                                                        <small class="text-muted">Cooperativa Verde Ltda.</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>joao.silva@cooperativaverde.com</td>
-                                            <td><span class="badge bg-info">Cooperativa</span></td>
-                                            <td><span class="badge bg-success">Ativo</span></td>
-                                            <td>15/01/2024</td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm">
-                                                    <button class="btn btn-outline-primary" onclick="editUser(1)" title="Editar">
-                                                        ✏️
-                                                    </button>
-                                                    <button class="btn btn-outline-info" onclick="viewUser(1)" title="Visualizar">
-                                                        👁️
-                                                    </button>
-                                                    <button class="btn btn-outline-danger" onclick="deleteUser(1)" title="Excluir">
-                                                        🗑️
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="bg-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                                        <span class="text-white fw-bold">MS</span>
-                                                    </div>
-                                                    <div>
-                                                        <strong>Maria Santos</strong><br>
-                                                        <small class="text-muted">EcoRecicla</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>maria.santos@ecorecicla.com</td>
-                                            <td><span class="badge bg-info">Cooperativa</span></td>
-                                            <td><span class="badge bg-success">Ativo</span></td>
-                                            <td>22/01/2024</td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm">
-                                                    <button class="btn btn-outline-primary" onclick="editUser(2)" title="Editar">
-                                                        ✏️
-                                                    </button>
-                                                    <button class="btn btn-outline-info" onclick="viewUser(2)" title="Visualizar">
-                                                        👁️
-                                                    </button>
-                                                    <button class="btn btn-outline-danger" onclick="deleteUser(2)" title="Excluir">
-                                                        🗑️
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                                        <span class="text-white fw-bold">CA</span>
-                                                    </div>
-                                                    <div>
-                                                        <strong>Carlos Almeida</strong><br>
-                                                        <small class="text-muted">Administrador do Sistema</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>carlos.admin@reciclafacil.com</td>
-                                            <td><span class="badge bg-warning">Administrador</span></td>
-                                            <td><span class="badge bg-success">Ativo</span></td>
-                                            <td>10/01/2024</td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm">
-                                                    <button class="btn btn-outline-primary" onclick="editUser(3)" title="Editar">
-                                                        ✏️
-                                                    </button>
-                                                    <button class="btn btn-outline-info" onclick="viewUser(3)" title="Visualizar">
-                                                        👁️
-                                                    </button>
-                                                    <button class="btn btn-outline-secondary" disabled title="Não é possível excluir administrador principal">
-                                                        🔒
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                                        <span class="text-white fw-bold">PO</span>
-                                                    </div>
-                                                    <div>
-                                                        <strong>Pedro Oliveira</strong><br>
-                                                        <small class="text-muted">Recicla Mais</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>pedro@reciclamais.com</td>
-                                            <td><span class="badge bg-info">Cooperativa</span></td>
-                                            <td><span class="badge bg-warning">Pendente</span></td>
-                                            <td>28/01/2024</td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm">
-                                                    <button class="btn btn-outline-success" onclick="approveUser(4)" title="Aprovar">
-                                                        ✅
-                                                    </button>
-                                                    <button class="btn btn-outline-primary" onclick="editUser(4)" title="Editar">
-                                                        ✏️
-                                                    </button>
-                                                    <button class="btn btn-outline-danger" onclick="deleteUser(4)" title="Excluir">
-                                                        🗑️
-                                                    </button>
+                                            <td colspan="6" class="text-center text-muted">
+                                                <div class="d-flex justify-content-center align-items-center">
+                                                    <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+                                                    Carregando usuários...
                                                 </div>
                                             </td>
                                         </tr>
