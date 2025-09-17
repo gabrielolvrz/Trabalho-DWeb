@@ -362,6 +362,7 @@ function initializeHomePage() {
     if (searchForm) {
         searchForm.addEventListener('submit', handleSearchSubmit);
     }
+    loadPublicPoints();
 }
 function initializeLoginPage() {
     const loginForm = document.getElementById('loginForm');
@@ -447,6 +448,18 @@ async function loadPontos() {
     }
 }
 
+async function loadPublicPoints() {
+    try {
+        const pontos = await DatabaseAPI.getPontos();
+        const container = document.getElementById('collectionPoints');
+        if (container) {
+            renderCollectionPoints(pontos, container);
+        }
+    } catch (error) {
+        console.error('Erro ao carregar pontos públicos:', error);
+    }
+}
+
 function renderPontosTable(pontos) {
     const tbody = document.getElementById('pontosTableBody');
     if (!tbody) return;
@@ -463,10 +476,10 @@ function renderPontosTable(pontos) {
         const statusText = ponto.status === 'disponivel' ? 'Disponível' : 
                           ponto.status === 'limitado' ? 'Capacidade Limitada' : 'Manutenção';
         
-        const materialsHtml = ponto.materiais.map(material => 
+        const materialsHtml = (ponto.materiais || []).map(material => 
             `<span class="badge bg-primary me-1">${material.charAt(0).toUpperCase() + material.slice(1)}</span>`
         ).join('');
-        
+
         html += `
             <tr>
                 <td>
@@ -641,7 +654,10 @@ function fillProfileForm(user) {
         'lastName': user.nome ? user.nome.split(' ').slice(1).join(' ') || '' : '',
         'email': user.email || '',
         'userTypeDisplay': user.tipo === 'admin' ? 'Administrador' : 'Cooperativa',
-        'organizationName': user.organizacao || ''
+        'organizationName': user.organizacao || '',
+        'phone': user.telefone || '',
+        'address': user.endereco || '',
+        'cnpj': user.cnpj || ''
     };
     
     Object.keys(fields).forEach(fieldName => {
@@ -733,15 +749,16 @@ async function handleRegisterSubmit(e) {
     
     try {
         // Preparar dados para envio
+        const nomeCompleto = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
         const userData = {
-            nome: data.nome,
+            nome: nomeCompleto,
             email: data.email,
-            senha: data.senha,
+            senha: data.password,
             tipo: data.userType,
             status: 'pendente', // Novos usuários começam como pendentes
-            organizacao: data.organizacao || null,
-            telefone: data.telefone || null,
-            endereco: data.endereco || null,
+            organizacao: data.organizationName || null,
+            telefone: data.phone || null,
+            endereco: data.address || null,
             cnpj: data.cnpj || null
         };
         
@@ -778,13 +795,13 @@ function filterCollectionPoints(materialType, location) {
     
     if (materialType) {
         filteredPoints = filteredPoints.filter(ponto => 
-            ponto.materials.includes(materialType)
+            (ponto.materiais || []).includes(materialType)
         );
     }
     
     if (location) {
         filteredPoints = filteredPoints.filter(ponto => 
-            ponto.address.toLowerCase().includes(location.toLowerCase())
+            (ponto.endereco || '').toLowerCase().includes(location.toLowerCase())
         );
     }
     renderCollectionPoints(filteredPoints, pointsContainer);
@@ -810,7 +827,7 @@ function renderCollectionPoints(points, container) {
         const statusText = ponto.status === 'disponivel' ? 'Disponível' : 
                           ponto.status === 'limitado' ? 'Capacidade Limitada' : 'Manutenção';
         
-        const materialsHtml = ponto.materials.map(material => 
+        const materialsHtml = (ponto.materiais || []).map(material => 
             `<span class="badge bg-primary me-1">${material.charAt(0).toUpperCase() + material.slice(1)}</span>`
         ).join('');
         
@@ -818,11 +835,11 @@ function renderCollectionPoints(points, container) {
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">${ponto.name}</h5>
+                        <h5 class="card-title">${ponto.nome}</h5>
                         <p class="card-text">
                             <strong>Materiais:</strong><br>${materialsHtml}<br>
-                            <strong>Endereço:</strong> ${ponto.address}<br>
-                            <strong>Horário:</strong> ${ponto.hours}
+                            <strong>Endereço:</strong> ${ponto.endereco}<br>
+                            <strong>Horário:</strong> ${ponto.horario_funcionamento || 'N/A'}
                         </p>
                         <span class="badge bg-${statusClass}">${statusText}</span>
                     </div>
@@ -1072,12 +1089,13 @@ async function handleProfileUpdate(e) {
     const data = Object.fromEntries(formData);
     
     // Preparar dados para envio
+    const nomeCompleto = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
     const userData = {
-        nome: data.nome,
+        nome: nomeCompleto,
         email: data.email,
-        organizacao: data.organizacao || null,
-        telefone: data.telefone || null,
-        endereco: data.endereco || null,
+        organizacao: data.organizationName || null,
+        telefone: data.phone || null,
+        endereco: data.address || null,
         cnpj: data.cnpj || null
     };
     
@@ -1087,17 +1105,24 @@ async function handleProfileUpdate(e) {
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Atualizando...';
     
     try {
-        const currentUser = JSON.parse(localStorage.getItem('user'));
+        const currentUser = Auth.getCurrentUser();
+        if (!currentUser) {
+            Utils.showToast('Sessão expirada. Faça login novamente.', 'danger');
+            Auth.logout();
+            return;
+        }
+
         await DatabaseAPI.updateUser(currentUser.id, userData);
         
         // Atualizar dados do usuário no localStorage
         const updatedUser = { ...currentUser, ...userData };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        localStorage.setItem('reciclafacil_user', JSON.stringify(updatedUser));
         
         Utils.showToast('Perfil atualizado com sucesso!', 'success');
         
         // Atualizar nome na interface
-        updateUserInterface();
+        updateUserInterface(updatedUser);
+        fillProfileForm(updatedUser);
         
     } catch (error) {
         console.error('Erro ao atualizar perfil:', error);
@@ -1329,4 +1354,3 @@ window.ReciclaFacil = {
     deleteAccount,
     confirmDeleteAccount
 };
-
