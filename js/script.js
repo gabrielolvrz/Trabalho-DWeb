@@ -362,6 +362,20 @@ function initializeHomePage() {
     if (searchForm) {
         searchForm.addEventListener('submit', handleSearchSubmit);
     }
+
+    const materialSelect = document.getElementById('materialType');
+    const locationInput = document.getElementById('location');
+    if (materialSelect) {
+        materialSelect.addEventListener('change', () => {
+            filterCollectionPoints(materialSelect.value, locationInput ? locationInput.value : '');
+        });
+    }
+    if (locationInput) {
+        locationInput.addEventListener('input', () => {
+            filterCollectionPoints(materialSelect ? materialSelect.value : '', locationInput.value);
+        });
+    }
+
     loadPublicPoints();
 }
 function initializeLoginPage() {
@@ -441,7 +455,8 @@ async function loadResponsaveis() {
 async function loadPontos() {
     try {
         const pontos = await DatabaseAPI.getPontos();
-        renderPontosTable(pontos);
+        AppData.pontos = pontos;
+        applyPontosFilters();
     } catch (error) {
         console.error('Erro ao carregar pontos de coleta:', error);
         Utils.showToast('Erro ao carregar pontos de coleta', 'danger');
@@ -451,12 +466,73 @@ async function loadPontos() {
 async function loadPublicPoints() {
     try {
         const pontos = await DatabaseAPI.getPontos();
+        AppData.pontos = pontos;
+        populateHomeMaterialFilter();
         const container = document.getElementById('collectionPoints');
         if (container) {
             renderCollectionPoints(pontos, container);
         }
     } catch (error) {
         console.error('Erro ao carregar pontos públicos:', error);
+        const container = document.getElementById('collectionPoints');
+        if (container) {
+            container.innerHTML = '<div class="col-12"><div class="alert alert-danger text-center">Erro ao carregar pontos de coleta públicos.</div></div>';
+        }
+    }
+}
+
+function applyPontosFilters(filters = {}) {
+    const nameInput = document.getElementById('searchName');
+    const materialSelect = document.getElementById('filterMaterial');
+    const statusSelect = document.getElementById('filterStatus');
+
+    const nameFilter = (filters.name ?? (nameInput ? nameInput.value : '')).trim().toLowerCase();
+    const materialFilter = (filters.material ?? (materialSelect ? materialSelect.value : '')).trim();
+    const statusFilter = (filters.status ?? (statusSelect ? statusSelect.value : '')).trim();
+
+    let filtered = Array.isArray(AppData.pontos) ? [...AppData.pontos] : [];
+
+    if (nameFilter) {
+        filtered = filtered.filter(ponto =>
+            (ponto.nome || '').toLowerCase().includes(nameFilter)
+        );
+    }
+
+    if (materialFilter) {
+        filtered = filtered.filter(ponto =>
+            (ponto.materiais || []).some(material => material === materialFilter)
+        );
+    }
+
+    if (statusFilter) {
+        filtered = filtered.filter(ponto => (ponto.status || '') === statusFilter);
+    }
+
+    renderPontosTable(filtered);
+}
+
+function populateHomeMaterialFilter() {
+    const materialSelect = document.getElementById('materialType');
+    if (!materialSelect) return;
+
+    const previousValue = materialSelect.value;
+    const materialsSet = new Set();
+    (AppData.pontos || []).forEach(ponto => {
+        (ponto.materiais || []).forEach(material => {
+            if (material) materialsSet.add(material);
+        });
+    });
+
+    const options = ['<option value="">Todos os materiais</option>'];
+    materialsSet.forEach(material => {
+        const label = material.charAt(0).toUpperCase() + material.slice(1);
+        options.push(`<option value="${material}">${label}</option>`);
+    });
+
+    materialSelect.innerHTML = options.join('');
+
+    if (previousValue && materialsSet.has(previousValue)) {
+        materialSelect.value = previousValue;
     }
 }
 
@@ -464,7 +540,7 @@ function renderPontosTable(pontos) {
     const tbody = document.getElementById('pontosTableBody');
     if (!tbody) return;
     
-    if (pontos.length === 0) {
+    if (!Array.isArray(pontos) || pontos.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted"><em>Nenhum ponto de coleta encontrado</em></td></tr>';
         return;
     }
@@ -513,6 +589,7 @@ function renderPontosTable(pontos) {
     
     tbody.innerHTML = html;
 }
+
 async function initializeUsuarios() {
     // Carregar usuários
     await loadUsers();
@@ -521,6 +598,17 @@ async function initializeUsuarios() {
     if (searchForm) {
         searchForm.addEventListener('submit', handleUsersSearch);
     }
+
+    const userTypeFilter = document.getElementById('filterUserType');
+    if (userTypeFilter) {
+        userTypeFilter.addEventListener('change', () => applyUsersFilters());
+    }
+
+    const userStatusFilter = document.getElementById('filterUserStatus');
+    if (userStatusFilter) {
+        userStatusFilter.addEventListener('change', () => applyUsersFilters());
+    }
+
     const addUserForm = document.getElementById('addUserForm');
     if (addUserForm) {
         addUserForm.addEventListener('submit', handleAddUser);
@@ -542,8 +630,9 @@ async function initializeUsuarios() {
 async function loadUsers() {
     try {
         const users = await DatabaseAPI.getUsers();
-        renderUsersTable(users);
+        AppData.users = users;
         updateUserStats(users);
+        applyUsersFilters();
     } catch (error) {
         console.error('Erro ao carregar usuários:', error);
         Utils.showToast('Erro ao carregar usuários', 'danger');
@@ -567,6 +656,33 @@ function updateUserStats(users) {
     if (activeUsersEl) activeUsersEl.textContent = activeUsers;
     if (cooperativasEl) cooperativasEl.textContent = cooperativas;
     if (administradoresEl) administradoresEl.textContent = administradores;
+}
+
+
+function applyUsersFilters(filters = {}) {
+    const nameInput = document.getElementById('searchUserName');
+    const typeSelect = document.getElementById('filterUserType');
+    const statusSelect = document.getElementById('filterUserStatus');
+
+    const nameFilter = (filters.name ?? (nameInput ? nameInput.value : '')).trim().toLowerCase();
+    const typeFilter = filters.type ?? (typeSelect ? typeSelect.value : '');
+    const statusFilter = filters.status ?? (statusSelect ? statusSelect.value : '');
+
+    let filtered = AppData.users || [];
+
+    if (nameFilter) {
+        filtered = filtered.filter(user => (user.nome || '').toLowerCase().includes(nameFilter));
+    }
+
+    if (typeFilter) {
+        filtered = filtered.filter(user => (user.tipo || '') === typeFilter);
+    }
+
+    if (statusFilter) {
+        filtered = filtered.filter(user => (user.status || '') === statusFilter);
+    }
+
+    renderUsersTable(filtered);
 }
 
 function renderUsersTable(users) {
@@ -790,18 +906,20 @@ function filterCollectionPoints(materialType, location) {
     const pointsContainer = document.getElementById('collectionPoints');
     if (!pointsContainer) return;
     
-    // TODO: Implementar busca no banco de dados
-    let filteredPoints = AppData.pontos;
-    
-    if (materialType) {
-        filteredPoints = filteredPoints.filter(ponto => 
-            (ponto.materiais || []).includes(materialType)
+    const trimmedMaterial = (materialType || '').trim();
+    const trimmedLocation = (location || '').trim().toLowerCase();
+
+    let filteredPoints = Array.isArray(AppData.pontos) ? [...AppData.pontos] : [];
+
+    if (trimmedMaterial) {
+        filteredPoints = filteredPoints.filter(ponto =>
+            (ponto.materiais || []).includes(trimmedMaterial)
         );
     }
-    
-    if (location) {
-        filteredPoints = filteredPoints.filter(ponto => 
-            (ponto.endereco || '').toLowerCase().includes(location.toLowerCase())
+
+    if (trimmedLocation) {
+        filteredPoints = filteredPoints.filter(ponto =>
+            (ponto.endereco || '').toLowerCase().includes(trimmedLocation)
         );
     }
     renderCollectionPoints(filteredPoints, pointsContainer);
@@ -963,6 +1081,15 @@ function getTimeAgo(dateString) {
 }
 function handlePontosSearch(e) {
     e.preventDefault();
+
+    const form = e.target;
+    const filters = {
+        name: form.querySelector('#searchName')?.value || '',
+        material: form.querySelector('#filterMaterial')?.value || '',
+        status: form.querySelector('#filterStatus')?.value || ''
+    };
+
+    applyPontosFilters(filters);
     Utils.showToast('Busca realizada!', 'info');
 }
 
@@ -1025,6 +1152,15 @@ async function handleAddPonto(e) {
 }
 function handleUsersSearch(e) {
     e.preventDefault();
+
+    const form = e.target;
+    const filters = {
+        name: form.querySelector('#searchUserName')?.value || '',
+        type: form.querySelector('#filterUserType')?.value || '',
+        status: form.querySelector('#filterUserStatus')?.value || ''
+    };
+
+    applyUsersFilters(filters);
     Utils.showToast('Busca de usuários realizada!', 'info');
 }
 
