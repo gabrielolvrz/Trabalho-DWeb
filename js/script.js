@@ -91,6 +91,11 @@ const Auth = {
                 })
             });
             
+            if (!response.ok) {
+                console.error('Erro HTTP:', response.status, response.statusText);
+                return { success: false, message: `Erro ${response.status}: ${response.statusText}` };
+            }
+            
             const data = await response.json();
             
             if (data.success) {
@@ -99,7 +104,7 @@ const Auth = {
                 localStorage.setItem('reciclafacil_token', data.data.token);
                 
                 return { success: true, user: data.data.user };
-        } else {
+            } else {
                 return { success: false, message: data.message };
             }
         } catch (error) {
@@ -408,8 +413,18 @@ function initializeRegisterPage() {
         }
     }
 }
-function initializeDashboard() {
-    loadDashboardStats();
+async function initializeDashboard() {
+    // Carregar dados básicos
+    await loadUsers();
+    await loadPontos();
+    
+    // Carregar estatísticas
+    await loadDashboardStats();
+    
+    // Configurar atualização automática a cada 30 segundos
+    setInterval(async () => {
+        await loadDashboardStats();
+    }, 30000);
 }
 async function initializePontosColeta() {
     // Carregar pontos de coleta
@@ -427,12 +442,40 @@ async function initializePontosColeta() {
     if (addPontoForm) {
         addPontoForm.addEventListener('submit', handleAddPonto);
     }
+
+    const editPontoForm = document.getElementById('editPontoForm');
+    if (editPontoForm) {
+        editPontoForm.addEventListener('submit', handleEditPonto);
+    }
 }
 
 async function loadResponsaveis() {
     try {
         const users = await DatabaseAPI.getUsers();
         const responsaveisSelect = document.getElementById('pontoResponsavel');
+        
+        if (responsaveisSelect) {
+            // Limpar opções existentes (exceto a primeira)
+            responsaveisSelect.innerHTML = '<option value="">Selecione o responsável</option>';
+            
+            // Adicionar usuários do tipo cooperativa
+            users.filter(user => user.tipo === 'cooperativa' && user.status === 'ativo').forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.nome} (${user.organizacao || 'Sem organização'})`;
+                responsaveisSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar responsáveis:', error);
+        Utils.showToast('Erro ao carregar responsáveis', 'danger');
+    }
+}
+
+async function loadResponsaveisForEdit() {
+    try {
+        const users = await DatabaseAPI.getUsers();
+        const responsaveisSelect = document.getElementById('editPontoResponsavel');
         
         if (responsaveisSelect) {
             // Limpar opções existentes (exceto a primeira)
@@ -625,6 +668,23 @@ async function initializeUsuarios() {
             });
         }
     }
+
+    const editUserForm = document.getElementById('editUserForm');
+    if (editUserForm) {
+        editUserForm.addEventListener('submit', handleEditUser);
+        const editUserTypeSelect = document.getElementById('editUserType');
+        const editCooperativaFields = document.getElementById('editCooperativaUserFields');
+        
+        if (editUserTypeSelect && editCooperativaFields) {
+            editUserTypeSelect.addEventListener('change', function() {
+                if (this.value === 'cooperativa') {
+                    editCooperativaFields.style.display = 'block';
+                } else {
+                    editCooperativaFields.style.display = 'none';
+                }
+            });
+        }
+    }
 }
 
 async function loadUsers() {
@@ -723,9 +783,6 @@ function renderUsersTable(users) {
                         <button class="btn btn-outline-primary" onclick="editUser(${user.id})" title="Editar">
                             ✏️
                         </button>
-                        <button class="btn btn-outline-info" onclick="viewUser(${user.id})" title="Visualizar">
-                            👁️
-                        </button>
                         ${user.tipo !== 'admin' ? `
                             <button class="btn btn-outline-danger" onclick="deleteUser(${user.id})" title="Excluir">
                                 🗑️
@@ -782,7 +839,73 @@ function fillProfileForm(user) {
             field.value = fields[fieldName];
         }
     });
+    
+    // Atualizar elementos de exibição do perfil
+    updateProfileDisplay(user);
 }
+
+function updateProfileDisplay(user) {
+    // Atualizar informações do perfil
+    const userNameElement = document.getElementById('profileUserName');
+    if (userNameElement) {
+        userNameElement.textContent = user.nome || 'Nome não informado';
+    }
+    
+    const userTypeElement = document.getElementById('profileUserType');
+    if (userTypeElement) {
+        userTypeElement.textContent = user.tipo === 'admin' ? 'Administrador' : 'Cooperativa';
+    }
+    
+    const userEmailElement = document.getElementById('profileUserEmail');
+    if (userEmailElement) {
+        userEmailElement.textContent = user.email || 'Email não informado';
+    }
+    
+    const userStatusElement = document.getElementById('profileUserStatus');
+    if (userStatusElement) {
+        userStatusElement.textContent = user.status === 'ativo' ? 'Ativo' : 'Pendente';
+        userStatusElement.className = user.status === 'ativo' ? 'badge bg-success' : 'badge bg-warning';
+    }
+    
+    // Atualizar iniciais do usuário
+    const userInitialsElement = document.getElementById('userInitials');
+    if (userInitialsElement && user.nome) {
+        const initials = user.nome.split(' ').map(name => name.charAt(0)).join('').toUpperCase();
+        userInitialsElement.textContent = initials || 'U';
+    }
+    
+    // Carregar estatísticas do usuário
+    loadUserStats(user);
+}
+
+async function loadUserStats(user) {
+    try {
+        // Contar pontos gerenciados pelo usuário
+        const pontos = await DatabaseAPI.getPontos();
+        const userManagedPoints = pontos.filter(ponto => ponto.responsavel_id == user.id).length;
+        
+        const userManagedPointsElement = document.getElementById('userManagedPoints');
+        if (userManagedPointsElement) {
+            userManagedPointsElement.textContent = userManagedPoints;
+        }
+        
+        // Último acesso (simulado - pode ser implementado com timestamp real)
+        const userLastAccessElement = document.getElementById('userLastAccess');
+        if (userLastAccessElement) {
+            userLastAccessElement.textContent = 'Hoje';
+        }
+        
+        // Membro desde (simulado - pode ser implementado com data de criação real)
+        const userMemberSinceElement = document.getElementById('userMemberSince');
+        if (userMemberSinceElement) {
+            userMemberSinceElement.textContent = 'Jan 2024';
+        }
+        
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas do usuário:', error);
+    }
+}
+
 function setupGlobalEventListeners() {
     document.addEventListener('click', function(e) {
         if (e.target.id === 'logoutBtn' || e.target.closest('#logoutBtn')) {
@@ -973,19 +1096,19 @@ async function loadDashboardStats() {
         const stats = await DatabaseAPI.getStats();
         
         // Atualizar estatísticas principais
-    const elements = {
-        'activePontos': stats.activePontos,
-        'pendingPontos': stats.pendingPontos,
-        'totalUsers': stats.totalUsers,
-        'materialTypes': stats.materialTypes
-    };
-    
-    Object.keys(elements).forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = elements[id];
-        }
-    });
+        const elements = {
+            'activePontos': stats.activePontos,
+            'pendingPontos': stats.pendingPontos,
+            'totalUsers': stats.totalUsers,
+            'materialTypes': stats.materialTypes
+        };
+        
+        Object.keys(elements).forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = elements[id];
+            }
+        });
         
         // Atualizar barras de progresso
         updateProgressBar('activePointsProgress', 'activePointsPercent', stats.activePointsPercent);
@@ -1139,12 +1262,80 @@ async function handleAddPonto(e) {
         // Recarregar lista de pontos
         await loadPontos();
         
+        // Recarregar dashboard se estiver aberto
+        if (window.refreshDashboardData) {
+            await window.refreshDashboardData();
+        }
+        
     const modal = bootstrap.Modal.getInstance(document.getElementById('addPontoModal'));
     if (modal) modal.hide();
         form.reset();
         
     } catch (error) {
         Utils.showToast('Erro ao adicionar ponto de coleta: ' + error.message, 'danger');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+async function handleEditPonto(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    
+    // Coletar materiais selecionados
+    const materials = [];
+    const materialCheckboxes = form.querySelectorAll('input[name="materials[]"]:checked');
+    materialCheckboxes.forEach(checkbox => {
+        materials.push(checkbox.value);
+    });
+    
+    const pontoData = {
+        nome: data.nome,
+        endereco: data.endereco,
+        telefone: data.telefone || null,
+        horario_funcionamento: data.horario_inicio && data.horario_fim && data.dias_funcionamento 
+            ? `${data.dias_funcionamento}: ${data.horario_inicio} - ${data.horario_fim}`
+            : data.dias_funcionamento || null,
+        status: data.status || 'disponivel',
+        responsavel_id: data.responsavel_id || null,
+        materiais: materials
+    };
+    
+    const submitBtn = form.querySelector('button[type="submit"]') || 
+                     document.querySelector('button[form="editPontoForm"]') ||
+                     document.querySelector('#editPontoModal button[type="submit"]');
+    if (!submitBtn) {
+        console.error('Botão de submit não encontrado no formulário');
+        Utils.showToast('Erro: Botão de submit não encontrado', 'danger');
+        return;
+    }
+    
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando...';
+    
+    try {
+        await DatabaseAPI.updatePonto(data.pontoId, pontoData);
+        Utils.showToast('Ponto de coleta atualizado com sucesso!', 'success');
+        
+        // Recarregar lista de pontos
+        await loadPontos();
+        
+        // Recarregar dashboard se estiver aberto
+        if (window.refreshDashboardData) {
+            await window.refreshDashboardData();
+        }
+        
+        // Fechar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editPontoModal'));
+        if (modal) modal.hide();
+        
+    } catch (error) {
+        Utils.showToast('Erro ao atualizar ponto de coleta: ' + error.message, 'danger');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
@@ -1210,9 +1401,72 @@ async function handleAddUser(e) {
         // Recarregar lista de usuários
         await loadUsers();
         
+        // Recarregar dashboard se estiver aberto
+        if (window.refreshDashboardData) {
+            await window.refreshDashboardData();
+        }
+        
     } catch (error) {
         console.error('Erro ao criar usuário:', error);
         Utils.showToast('Erro ao adicionar usuário: ' + error.message, 'danger');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+async function handleEditUser(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    
+    // Preparar dados para envio
+    const nomeCompleto = `${(data.firstName || '').trim()} ${(data.lastName || '').trim()}`.trim();
+    const userData = {
+        nome: nomeCompleto,
+        email: data.email,
+        tipo: data.userType,
+        status: data.status,
+        organizacao: data.organization || null,
+        telefone: data.phone || null,
+        endereco: data.address || null,
+        cnpj: data.cnpj || null
+    };
+    
+    const submitBtn = form.querySelector('button[type="submit"]') || 
+                     document.querySelector('button[form="editUserForm"]') ||
+                     document.querySelector('#editUserModal button[type="submit"]');
+    if (!submitBtn) {
+        console.error('Botão de submit não encontrado no formulário');
+        Utils.showToast('Erro: Botão de submit não encontrado', 'danger');
+        return;
+    }
+    
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando...';
+    
+    try {
+        await DatabaseAPI.updateUser(data.userId, userData);
+        Utils.showToast('Usuário atualizado com sucesso!', 'success');
+        
+        // Fechar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+        if (modal) modal.hide();
+        
+        // Recarregar lista de usuários
+        await loadUsers();
+        
+        // Recarregar dashboard se estiver aberto
+        if (window.refreshDashboardData) {
+            await window.refreshDashboardData();
+        }
+        
+    } catch (error) {
+        console.error('Erro ao atualizar usuário:', error);
+        Utils.showToast('Erro ao atualizar usuário: ' + error.message, 'danger');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
@@ -1296,8 +1550,49 @@ function handleSettingsUpdate(e) {
     e.preventDefault();
     Utils.showToast('Configurações salvas com sucesso!', 'success');
 }
-function editPonto(id) {
-    Utils.showToast(`Editando ponto ${id}`, 'info');
+async function editPonto(id) {
+    try {
+        // Buscar dados do ponto
+        const ponto = await DatabaseAPI.getPonto(id);
+        
+        // Preencher o modal com os dados do ponto
+        document.getElementById('editPontoId').value = ponto.id;
+        document.getElementById('editPontoNome').value = ponto.nome;
+        document.getElementById('editPontoEndereco').value = ponto.endereco;
+        document.getElementById('editPontoTelefone').value = ponto.telefone || '';
+        document.getElementById('editPontoStatus').value = ponto.status;
+        document.getElementById('editPontoResponsavel').value = ponto.responsavel_id || '';
+        
+        // Processar horário de funcionamento
+        if (ponto.horario_funcionamento) {
+            const horarioParts = ponto.horario_funcionamento.split(': ');
+            if (horarioParts.length === 2) {
+                document.getElementById('editPontoDias').value = horarioParts[0];
+                const horarioRange = horarioParts[1].split(' - ');
+                if (horarioRange.length === 2) {
+                    document.getElementById('editPontoInicio').value = horarioRange[0];
+                    document.getElementById('editPontoFim').value = horarioRange[1];
+                }
+            }
+        }
+        
+        // Marcar materiais aceitos
+        const materialCheckboxes = document.querySelectorAll('#editPontoForm input[name="materials[]"]');
+        materialCheckboxes.forEach(checkbox => {
+            checkbox.checked = ponto.materiais && ponto.materiais.includes(checkbox.value);
+        });
+        
+        // Carregar responsáveis no dropdown
+        await loadResponsaveisForEdit();
+        
+        // Abrir o modal
+        const modal = new bootstrap.Modal(document.getElementById('editPontoModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados do ponto:', error);
+        Utils.showToast('Erro ao carregar dados do ponto', 'danger');
+    }
 }
 function viewPonto(id) {
     Utils.showToast(`Visualizando ponto ${id}`, 'info');
@@ -1308,21 +1603,53 @@ async function deletePonto(id) {
             await DatabaseAPI.deletePonto(id);
             Utils.showToast('Ponto de coleta excluído com sucesso!', 'success');
             await loadPontos(); // Recarregar lista
+            
+            // Recarregar dashboard se estiver aberto
+            if (window.refreshDashboardData) {
+                await window.refreshDashboardData();
+            }
         } catch (error) {
             Utils.showToast('Erro ao excluir ponto de coleta: ' + error.message, 'danger');
         }
     }
 }
 
-function editUser(id) {
-    Utils.showToast(`Editando usuário ${id}`, 'info');
-    // TODO: Implementar modal de edição
+async function editUser(id) {
+    try {
+        // Buscar dados do usuário
+        const user = await DatabaseAPI.getUser(id);
+        
+        // Preencher o modal com os dados do usuário
+        const nomeParts = user.nome.split(' ');
+        document.getElementById('editUserId').value = user.id;
+        document.getElementById('editUserFirstName').value = nomeParts[0] || '';
+        document.getElementById('editUserLastName').value = nomeParts.slice(1).join(' ') || '';
+        document.getElementById('editUserEmail').value = user.email;
+        document.getElementById('editUserPhone').value = user.telefone || '';
+        document.getElementById('editUserType').value = user.tipo;
+        document.getElementById('editUserStatus').value = user.status;
+        document.getElementById('editUserAddress').value = user.endereco || '';
+        document.getElementById('editUserOrganization').value = user.organizacao || '';
+        document.getElementById('editUserCnpj').value = user.cnpj || '';
+        
+        // Mostrar/ocultar campos de cooperativa
+        const cooperativaFields = document.getElementById('editCooperativaUserFields');
+        if (user.tipo === 'cooperativa') {
+            cooperativaFields.style.display = 'block';
+        } else {
+            cooperativaFields.style.display = 'none';
+        }
+        
+        // Abrir o modal
+        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+        Utils.showToast('Erro ao carregar dados do usuário', 'danger');
+    }
 }
 
-function viewUser(id) {
-    Utils.showToast(`Visualizando usuário ${id}`, 'info');
-    // TODO: Implementar modal de visualização
-}
 
 async function deleteUser(id) {
     if (confirm('Tem certeza que deseja excluir este usuário?')) {
@@ -1330,6 +1657,11 @@ async function deleteUser(id) {
             await DatabaseAPI.deleteUser(id);
             Utils.showToast('Usuário excluído com sucesso!', 'success');
             await loadUsers(); // Recarregar lista
+            
+            // Recarregar dashboard se estiver aberto
+            if (window.refreshDashboardData) {
+                await window.refreshDashboardData();
+            }
         } catch (error) {
             Utils.showToast('Erro ao excluir usuário: ' + error.message, 'danger');
         }
@@ -1473,6 +1805,19 @@ const DatabaseAPI = {
     }
 };
 
+// Função global para recarregar dados
+window.refreshDashboardData = async function() {
+    if (typeof loadDashboardStats === 'function') {
+        await loadDashboardStats();
+    }
+    if (typeof loadUsers === 'function') {
+        await loadUsers();
+    }
+    if (typeof loadPontos === 'function') {
+        await loadPontos();
+    }
+};
+
 window.ReciclaFacil = {
     Auth,
     Utils,
@@ -1483,11 +1828,11 @@ window.ReciclaFacil = {
     viewPonto,
     deletePonto,
     editUser,
-    viewUser,
     deleteUser,
     approveUser,
     resetForm,
     exportData,
     deleteAccount,
-    confirmDeleteAccount
+    confirmDeleteAccount,
+    refreshDashboardData: window.refreshDashboardData
 };

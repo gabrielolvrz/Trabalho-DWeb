@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pontos de Coleta - ReciclaFácil</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../css/style.css" rel="stylesheet">
+    <link href="css/style.css?v=1.1" rel="stylesheet">
 </head>
 <body>
     <header class="bg-success text-white py-3">
@@ -273,8 +273,117 @@
         </div>
     </footer>
 
+    <!-- Modal de Edição de Ponto de Coleta -->
+    <div class="modal fade" id="editPontoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Ponto de Coleta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPontoForm" novalidate>
+                        <input type="hidden" id="editPontoId" name="pontoId">
+                        <div class="mb-3">
+                            <label for="editPontoNome" class="form-label">Nome do Ponto</label>
+                            <input type="text" class="form-control" id="editPontoNome" name="nome" required>
+                            <div class="invalid-feedback">
+                                Por favor, insira o nome do ponto.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editPontoEndereco" class="form-label">Endereço</label>
+                            <textarea class="form-control" id="editPontoEndereco" name="endereco" rows="2" required></textarea>
+                            <div class="invalid-feedback">
+                                Por favor, insira o endereço.
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editPontoTelefone" class="form-label">Telefone</label>
+                                <input type="tel" class="form-control" id="editPontoTelefone" name="telefone" placeholder="(11) 99999-9999">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editPontoStatus" class="form-label">Status</label>
+                                <select class="form-select" id="editPontoStatus" name="status" required>
+                                    <option value="disponivel">Disponível</option>
+                                    <option value="limitado">Capacidade Limitada</option>
+                                    <option value="manutencao">Em Manutenção</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editPontoDias" class="form-label">Dias de Funcionamento</label>
+                                <input type="text" class="form-control" id="editPontoDias" name="dias_funcionamento" placeholder="Ex: Seg-Sex">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="editPontoInicio" class="form-label">Horário Início</label>
+                                <input type="time" class="form-control" id="editPontoInicio" name="horario_inicio">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="editPontoFim" class="form-label">Horário Fim</label>
+                                <input type="time" class="form-control" id="editPontoFim" name="horario_fim">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editPontoResponsavel" class="form-label">Responsável</label>
+                            <select class="form-select" id="editPontoResponsavel" name="responsavel_id">
+                                <option value="">Selecione o responsável</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Materiais Aceitos</label>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="editMaterialPapel" name="materials[]" value="papel">
+                                        <label class="form-check-label" for="editMaterialPapel">Papel</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="editMaterialPlastico" name="materials[]" value="plastico">
+                                        <label class="form-check-label" for="editMaterialPlastico">Plástico</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="editMaterialVidro" name="materials[]" value="vidro">
+                                        <label class="form-check-label" for="editMaterialVidro">Vidro</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="editMaterialMetal" name="materials[]" value="metal">
+                                        <label class="form-check-label" for="editMaterialMetal">Metal</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="editMaterialEletronicos" name="materials[]" value="eletronicos">
+                                        <label class="form-check-label" for="editMaterialEletronicos">Eletrônicos</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="editPontoForm" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/script.js"></script>
+    <script src="js/script.js?v=1.1"></script>
 </body>
 </html>
 
