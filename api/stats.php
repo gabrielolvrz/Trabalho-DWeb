@@ -21,68 +21,68 @@ try {
         $stats = [];
         
         // Contar pontos ativos
-        $stats['activePontos'] = $db->fetchOne(
-            "SELECT COUNT(*) as count FROM pontos_coleta WHERE status = 'disponivel'"
-        )['count'];
-        
-        // Contar pontos pendentes/limitados
-        $stats['pendingPontos'] = $db->fetchOne(
-            "SELECT COUNT(*) as count FROM pontos_coleta WHERE status = 'limitado'"
-        )['count'];
-        
-        // Contar usuários ativos
-        $stats['totalUsers'] = $db->fetchOne(
-            "SELECT COUNT(*) as count FROM usuarios WHERE status = 'ativo'"
-        )['count'];
-        
-        // Contar tipos de materiais únicos (baseado na coluna materials)
-        $materialsCount = $db->fetchAll("SELECT materials FROM pontos_coleta WHERE materials IS NOT NULL");
-        $uniqueMaterials = [];
-        foreach ($materialsCount as $row) {
-            $materials = json_decode($row['materials'], true);
-            if ($materials) {
-                $uniqueMaterials = array_merge($uniqueMaterials, $materials);
-            }
-        }
-        $stats['materialTypes'] = count(array_unique($uniqueMaterials));
-        
-        // Percentuais para o status do sistema
-        $totalPontos = $db->fetchOne("SELECT COUNT(*) as count FROM pontos_coleta")['count'];
-        $stats['activePointsPercent'] = $totalPontos > 0 ? round(($stats['activePontos'] / $totalPontos) * 100) : 0;
-        
-        $totalUsers = $db->fetchOne("SELECT COUNT(*) as count FROM usuarios")['count'];
-        $stats['activeUsersPercent'] = $totalUsers > 0 ? round(($stats['totalUsers'] / $totalUsers) * 100) : 0;
-        
-        // Capacidade média (simulado - pode ser calculado baseado em dados reais)
-        $stats['capacityPercent'] = 75; // Valor simulado
-        
-        // Materiais mais coletados
-        $materialsCount = $db->fetchAll("SELECT materials FROM pontos_coleta WHERE materials IS NOT NULL");
-        $materialStats = [];
-        foreach ($materialsCount as $row) {
-            $materials = json_decode($row['materials'], true);
-            if ($materials) {
-                foreach ($materials as $material) {
-                    $materialStats[$material] = ($materialStats[$material] ?? 0) + 1;
-                }
-            }
-        }
-        
-        // Ordenar por quantidade e pegar os top 5
-        arsort($materialStats);
-        $stats['materialsStats'] = array_slice(array_map(function($material, $count) {
-            return ['material' => $material, 'count' => $count];
-        }, array_keys($materialStats), array_values($materialStats)), 0, 5);
-        
-        // Atividades recentes (últimos pontos criados)
-        $recentActivities = $db->fetchAll(
-            "SELECT 'Novo ponto cadastrado' as activity, name as description, created_at
-             FROM pontos_coleta 
-             ORDER BY created_at DESC 
+        $activePontos = $db->fetchOne(
+            "SELECT COUNT(*) AS count FROM pontos_coleta WHERE status = 'disponivel'"
+        );
+        $stats['activePontos'] = $activePontos['count'] ?? 0;
+
+        $pendingPontos = $db->fetchOne(
+            "SELECT COUNT(*) AS count FROM pontos_coleta WHERE status = 'limitado'"
+        );
+        $stats['pendingPontos'] = $pendingPontos['count'] ?? 0;
+
+        $totalUsersActive = $db->fetchOne(
+            "SELECT COUNT(*) AS count FROM usuarios WHERE status = 'ativo'"
+        );
+        $stats['totalUsers'] = $totalUsersActive['count'] ?? 0;
+
+        $materialTypes = $db->fetchOne(
+            "SELECT COUNT(DISTINCT material) AS count FROM materiais_ponto"
+        );
+        $stats['materialTypes'] = $materialTypes['count'] ?? 0;
+
+        $totalPontos = $db->fetchOne("SELECT COUNT(*) AS count FROM pontos_coleta");
+        $totalPontosValue = $totalPontos['count'] ?? 0;
+        $stats['activePointsPercent'] = $totalPontosValue > 0
+            ? (int)round(($stats['activePontos'] / $totalPontosValue) * 100)
+            : 0;
+
+        $totalUsers = $db->fetchOne("SELECT COUNT(*) AS count FROM usuarios");
+        $totalUsersValue = $totalUsers['count'] ?? 0;
+        $stats['activeUsersPercent'] = $totalUsersValue > 0
+            ? (int)round(($stats['totalUsers'] / $totalUsersValue) * 100)
+            : 0;
+
+        // Capacidade média ainda é um valor simulado
+        $stats['capacityPercent'] = 75;
+
+        $materialStats = $db->fetchAll(
+            "SELECT material, COUNT(*) AS count
+             FROM materiais_ponto
+             GROUP BY material
+             ORDER BY count DESC
              LIMIT 5"
         );
-        
-        $stats['recentActivities'] = $recentActivities;
+        $stats['materialsStats'] = array_map(static function ($row) {
+            return [
+                'material' => $row['material'],
+                'count' => (int)$row['count'],
+            ];
+        }, $materialStats);
+
+        $recentActivities = $db->fetchAll(
+            "SELECT 'Novo ponto cadastrado' AS activity, nome AS description, data_criacao
+             FROM pontos_coleta
+             ORDER BY data_criacao DESC
+             LIMIT 5"
+        );
+        $stats['recentActivities'] = array_map(static function ($row) {
+            return [
+                'activity' => $row['activity'],
+                'description' => $row['description'],
+                'created_at' => $row['data_criacao'],
+            ];
+        }, $recentActivities);
         
         echo json_encode(['success' => true, 'data' => $stats]);
         

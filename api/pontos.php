@@ -13,6 +13,70 @@ require_once '../src/Core/Database.php';
 
 use App\Core\Database;
 
+/**
+ * Mapeia materiais (materiais_ponto) para cada ponto informado.
+ * @param Database $db
+ * @param int[] $pontoIds
+ * @return array<int,array<int,string>>
+ */
+function loadMateriais(Database $db, array $pontoIds): array
+{
+    if (empty($pontoIds)) return [];
+
+    $placeholders = implode(',', array_fill(0, count($pontoIds), '?'));
+    $rows = $db->fetchAll(
+        "SELECT ponto_id, material FROM materiais_ponto WHERE ponto_id IN ($placeholders)",
+        $pontoIds
+    );
+
+    $map = [];
+    foreach ($rows as $row) {
+        $pid = (int)$row['ponto_id'];
+        $map[$pid][] = $row['material'];
+    }
+
+    return $map;
+}
+
+/**
+ * Normaliza o payload de materiais recebido da requisição.
+ * @param mixed $materiais
+ * @return array<int,string>
+ */
+function normalizeMateriais($materiais): array
+{
+    if (!is_array($materiais)) return [];
+    $filtered = array_map(static function ($m) {
+        return trim((string)$m);
+    }, $materiais);
+
+    $filtered = array_values(array_filter(array_unique($filtered), static function ($m) {
+        return $m !== '';
+    }));
+
+    return $filtered;
+}
+
+/**
+ * Persiste os materiais (apagando os anteriores) para um ponto.
+ */
+function persistMateriais(Database $db, int $pontoId, array $materiais): void
+{
+    // Limpa materiais atuais e insere os fornecidos
+    $db->delete('materiais_ponto', 'ponto_id = ?', [$pontoId]);
+
+    if (empty($materiais)) return;
+
+    $conn = $db->getConnection();
+    $stmt = $conn->prepare('INSERT INTO materiais_ponto (ponto_id, material) VALUES (:ponto_id, :material)');
+    foreach ($materiais as $material) {
+        $stmt->execute([
+            'ponto_id' => $pontoId,
+            'material' => $material,
+        ]);
+    }
+}
+
 try {
     $db = Database::getInstance();
     $method = $_SERVER['REQUEST_METHOD'];
@@ -21,8 +85,12 @@ try {
     
     // Extrair ID se presente na URL
     $id = null;
-    if (count($pathParts) > 2 && is_numeric($pathParts[2])) {
-        $id = (int)$pathParts[2];
+    // Procurar por ID em qualquer posição da URL
+    foreach ($pathParts as $part) {
+        if (is_numeric($part)) {
+            $id = (int)$part;
+            break;
+        }
     }
     
     switch ($method) {
@@ -30,17 +98,18 @@ try {
             if ($id) {
                 // Buscar ponto específico
                 $ponto = $db->fetchOne(
-                    "SELECT p.id, p.name as nome, p.address as endereco, p.phone as telefone, p.hours as horario_funcionamento, 
-                            p.status, p.user_id as responsavel_id, u.nome as responsavel_nome,
-                            p.materials as materiais
+                    "SELECT p.id, p.nome, p.endereco, p.telefone, p.horario_funcionamento, 
+                            p.status, p.responsavel_id, u.nome AS responsavel_nome,
+                            p.data_criacao, p.data_atualizacao
                      FROM pontos_coleta p
-                     LEFT JOIN usuarios u ON p.user_id = u.id
+                     LEFT JOIN usuarios u ON p.responsavel_id = u.id
                      WHERE p.id = ?",
                     [$id]
                 );
                 
                 if ($ponto) {
-                    $ponto['materiais'] = $ponto['materiais'] ? json_decode($ponto['materiais'], true) : [];
+                    $materiais = loadMateriais($db, [$ponto['id']]);
+                    $ponto['materiais'] = $materiais[$ponto['id']] ?? [];
                     echo json_encode(['success' => true, 'data' => $ponto]);
                 } else {
                     http_response_code(404);
@@ -49,19 +118,19 @@ try {
             } else {
                 // Buscar todos os pontos
                 $pontos = $db->fetchAll(
-                    "SELECT p.id, p.name as nome, p.address as endereco, p.phone as telefone, p.hours as horario_funcionamento, 
-                            p.status, p.user_id as responsavel_id, u.nome as responsavel_nome,
-                            p.materials as materiais
+                    "SELECT p.id, p.nome, p.endereco, p.telefone, p.horario_funcionamento,
+                            p.status, p.responsavel_id, u.nome AS responsavel_nome,
+                            p.data_criacao, p.data_atualizacao
                      FROM pontos_coleta p
-                     LEFT JOIN usuarios u ON p.user_id = u.id
-                     ORDER BY p.created_at DESC"
+                     LEFT JOIN usuarios u ON p.responsavel_id = u.id
+                     ORDER BY p.data_criacao DESC"
                 );
-                
-                // Processar materiais
+
+                $materiaisMap = loadMateriais($db, array_column($pontos, 'id'));
                 foreach ($pontos as &$ponto) {
-                    $ponto['materiais'] = $ponto['materiais'] ? json_decode($ponto['materiais'], true) : [];
+                    $ponto['materiais'] = $materiaisMap[$ponto['id']] ?? [];
                 }
-                
+
                 echo json_encode(['success' => true, 'data' => $pontos]);
             }
             break;
@@ -86,33 +155,32 @@ try {
                 }
             }
             
-            // Inserir ponto
+            $materiais = normalizeMateriais($input['materiais'] ?? []);
+
             $pontoData = [
-                'name' => $input['nome'],
-                'address' => $input['endereco'],
-                'phone' => $input['telefone'] ?? '',
-                'hours' => $input['horario_funcionamento'] ?? '',
+                'nome' => $input['nome'],
+                'endereco' => $input['endereco'],
+                'telefone' => $input['telefone'] ?? null,
+                'horario_funcionamento' => $input['horario_funcionamento'] ?? null,
                 'status' => $input['status'] ?? 'disponivel',
-                'user_id' => $input['responsavel_id'] ?? null,
-                'responsible' => '', // Campo obrigatório
-                'materials' => !empty($input['materiais']) ? json_encode($input['materiais']) : '[]'
+                'responsavel_id' => $input['responsavel_id'] ?? null,
             ];
-            
-            $pontoId = $db->insert('pontos_coleta', $pontoData);
-            
-            // Buscar ponto criado
+
+            $pontoId = (int)$db->insert('pontos_coleta', $pontoData);
+            persistMateriais($db, $pontoId, $materiais);
+
             $newPonto = $db->fetchOne(
-                "SELECT p.id, p.name as nome, p.address as endereco, p.phone as telefone, p.hours as horario_funcionamento, 
-                        p.status, p.user_id as responsavel_id, u.nome as responsavel_nome,
-                        p.materials as materiais
+                "SELECT p.id, p.nome, p.endereco, p.telefone, p.horario_funcionamento,
+                        p.status, p.responsavel_id, u.nome AS responsavel_nome,
+                        p.data_criacao, p.data_atualizacao
                  FROM pontos_coleta p
-                 LEFT JOIN usuarios u ON p.user_id = u.id
+                 LEFT JOIN usuarios u ON p.responsavel_id = u.id
                  WHERE p.id = ?",
                 [$pontoId]
             );
-            
-            $newPonto['materiais'] = $newPonto['materiais'] ? json_decode($newPonto['materiais'], true) : [];
-            
+
+            $newPonto['materiais'] = $materiais;
+
             echo json_encode(['success' => true, 'data' => $newPonto]);
             break;
             
@@ -140,44 +208,50 @@ try {
                 break;
             }
             
-            // Atualizar dados do ponto
             $updateData = [];
             $fieldMapping = [
-                'nome' => 'name',
-                'endereco' => 'address', 
-                'telefone' => 'phone',
-                'horario_funcionamento' => 'hours',
+                'nome' => 'nome',
+                'endereco' => 'endereco', 
+                'telefone' => 'telefone',
+                'horario_funcionamento' => 'horario_funcionamento',
                 'status' => 'status',
-                'responsavel_id' => 'user_id'
+                'responsavel_id' => 'responsavel_id'
             ];
-            
+
             foreach ($fieldMapping as $inputField => $dbField) {
-                if (isset($input[$inputField])) {
+                if (array_key_exists($inputField, $input)) {
                     $updateData[$dbField] = $input[$inputField];
                 }
             }
-            
-            // Atualizar materiais se fornecidos
-            if (isset($input['materiais']) && is_array($input['materiais'])) {
-                $updateData['materials'] = json_encode($input['materiais']);
-            }
-            
+
             if (!empty($updateData)) {
-                $db->query("UPDATE pontos_coleta SET " . implode(' = ?, ', array_keys($updateData)) . " = ? WHERE id = ?", array_merge(array_values($updateData), [$id]));
+                $db->update('pontos_coleta', $updateData, 'id = ?', [$id]);
             }
-            
-            // Buscar ponto atualizado
+
+            $materiais = null;
+            if (array_key_exists('materiais', $input)) {
+                $materiais = normalizeMateriais($input['materiais']);
+                persistMateriais($db, $id, $materiais);
+            }
+
             $updatedPonto = $db->fetchOne(
-                "SELECT p.id, p.name as nome, p.address as endereco, p.phone as telefone, p.hours as horario_funcionamento, 
-                        p.status, p.user_id as responsavel_id, u.nome as responsavel_nome,
-                        p.materials as materiais
+                "SELECT p.id, p.nome, p.endereco, p.telefone, p.horario_funcionamento,
+                        p.status, p.responsavel_id, u.nome AS responsavel_nome,
+                        p.data_criacao, p.data_atualizacao
                  FROM pontos_coleta p
-                 LEFT JOIN usuarios u ON p.user_id = u.id
+                 LEFT JOIN usuarios u ON p.responsavel_id = u.id
                  WHERE p.id = ?",
                 [$id]
             );
-            
-            $updatedPonto['materiais'] = $updatedPonto['materiais'] ? json_decode($updatedPonto['materiais'], true) : [];
+
+            if ($updatedPonto) {
+                if ($materiais === null) {
+                    $materiaisMap = loadMateriais($db, [$id]);
+                    $updatedPonto['materiais'] = $materiaisMap[$id] ?? [];
+                } else {
+                    $updatedPonto['materiais'] = $materiais;
+                }
+            }
             
             echo json_encode(['success' => true, 'data' => $updatedPonto]);
             break;

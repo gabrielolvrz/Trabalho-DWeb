@@ -21,8 +21,12 @@ try {
     
     // Extrair ID se presente na URL
     $id = null;
-    if (count($pathParts) > 2 && is_numeric($pathParts[2])) {
-        $id = (int)$pathParts[2];
+    // Procurar por ID em qualquer posição da URL
+    foreach ($pathParts as $part) {
+        if (is_numeric($part)) {
+            $id = (int)$part;
+            break;
+        }
     }
     
     switch ($method) {
